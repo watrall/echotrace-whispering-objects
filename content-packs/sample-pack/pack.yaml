@@ -1,7 +1,7 @@
 # Sample content pack scaffold for development.
 name: sample-pack
 nodes:
-  - id: object1
+  object1:
     role: whisper
     default_language: en
 media:
@@ -9,3 +9,9 @@ media:
     en:
       audio: audio/object1_en.mp3
       transcript: transcripts/object1_en.html
+    fr:
+      audio: audio/object1_fr.mp3
+      transcript: transcripts/object1_fr.html
+    es:
+      audio: audio/object1_es.mp3
+      transcript: transcripts/object1_es.html
