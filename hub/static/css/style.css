@@ -1,17 +1,139 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
-    color: #333333;
+    background-color: #f5f7fa;
+    color: #1f2933;
+}
+
+body.high-contrast {
+    background-color: #111111;
+    color: #f4f4f4;
 }
 
 header {
     background-color: #0f4c81;
     color: #ffffff;
     padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.4rem;
+    letter-spacing: 0.04em;
+}
+
+nav a {
+    color: #ffffff;
+    margin-left: 1rem;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+nav a:hover {
+    text-decoration: underline;
 }
 
 main {
-    padding: 1rem;
+    padding: 1.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+section {
+    background-color: #ffffff;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 1px 3px rgba(15, 24, 44, 0.15);
+}
+
+body.high-contrast section {
+    background-color: #1b1b1b;
+    box-shadow: 0 1px 4px rgba(250, 250, 250, 0.2);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+table th,
+table td {
+    border: 1px solid #d2d6dc;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+}
+
+body.high-contrast table th,
+body.high-contrast table td {
+    border-color: #3f3f3f;
+}
+
+button,
+.button-link {
+    display: inline-block;
+    padding: 0.6rem 1.1rem;
+    border-radius: 6px;
+    background-color: #0f4c81;
+    color: #ffffff;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+button.secondary,
+.button-link.secondary {
+    background-color: #e4e7eb;
+    color: #1f2933;
+}
+
+button:hover,
+.button-link:hover {
+    opacity: 0.9;
+}
+
+form.inline {
+    display: inline-block;
+    margin-top: 0.5rem;
+    margin-right: 1rem;
+}
+
+textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #cbd2d9;
+    font-family: monospace;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.flash {
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    background-color: #e4f0ff;
+    color: #16335b;
+    display: none;
+}
+
+.flash.error {
+    background-color: #fde8e8;
+    color: #611a15;
+}
+
+.flash.success {
+    background-color: #def7ec;
+    color: #03543f;
 }

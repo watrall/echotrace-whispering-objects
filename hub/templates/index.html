@@ -1,7 +1,29 @@
 {% extends 'base.html' %}
 {% block content %}
 <section>
-    <h2>Dashboard Scaffold</h2>
-    <p>The full dashboard experience will be implemented in subsequent chunks.</p>
+    <h2>Installation Snapshot</h2>
+    <p>
+        Active content pack:
+        {% if active_pack %}
+            <strong>{{ active_pack.name }}</strong>
+        {% else %}
+            <em>No pack selected</em>
+        {% endif %}
+    </p>
+    <p>Narrative unlocked: <strong>{{ 'Yes' if state['unlocked'] else 'No' }}</strong></p>
+    <p>Triggered fragments:</p>
+    {% if state['triggered'] %}
+        <ul>
+            {% for node in state['triggered'] %}
+                <li>{{ node }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p><em>No fragments triggered yet.</em></p>
+    {% endif %}
+    <form data-api="{{ url_for('api_reset_state') }}" data-refresh="true">
+        <button type="submit" class="secondary">Reset State</button>
+    </form>
+    <a class="button-link" href="{{ url_for('api_export_csv') }}">Export CSV</a>
 </section>
 {% endblock %}

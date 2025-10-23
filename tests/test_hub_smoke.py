@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from hub.dashboard_app import create_app
+import os
+
+os.environ.setdefault("ECHOTRACE_ADMIN_USER", "admin")
+os.environ.setdefault("ECHOTRACE_ADMIN_PASS", "secret")
+
+from hub.dashboard_app import create_app  # noqa: E402
 
 
 def test_health_endpoint_returns_ok() -> None:

@@ -1,7 +1,19 @@
 {% extends 'base.html' %}
 {% block content %}
 <section>
-    <h2>Analytics</h2>
-    <p>Analytics visualisations will be surfaced here.</p>
+    <h2>Analytics Summary</h2>
+    <p>Mystery unlock status: <strong>{{ 'Unlocked' if state['unlocked'] else 'Locked' }}</strong></p>
+    <p>Total unique fragments triggered: <strong>{{ state['triggered'] | length }}</strong></p>
+    <p>Recent heartbeat ages:</p>
+    {% if health %}
+        <ul>
+            {% for node_id, seconds in health.items() %}
+                <li>{{ node_id }} — {{ '%.0f'|format(seconds) }}s ago</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p><em>No heartbeat data recorded yet.</em></p>
+    {% endif %}
+    <a class="button-link" href="{{ url_for('api_export_csv') }}">Download CSV Export</a>
 </section>
 {% endblock %}

@@ -2,17 +2,24 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{{ title | default('EchoTrace Hub') }}</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     </head>
-    <body>
+    <body class="{% if accessibility_global.get('high_contrast') %}high-contrast{% endif %}">
         <header>
             <h1>EchoTrace Hub</h1>
-            <nav>
-                <a href="{{ url_for('index') }}">Home</a>
+            <nav aria-label="Primary navigation">
+                <a href="{{ url_for('index') }}">Overview</a>
+                <a href="{{ url_for('nodes') }}">Nodes</a>
+                <a href="{{ url_for('accessibility_page') }}">Accessibility</a>
+                <a href="{{ url_for('calibration') }}">Calibration</a>
+                <a href="{{ url_for('content') }}">Content</a>
+                <a href="{{ url_for('analytics') }}">Analytics</a>
             </nav>
         </header>
         <main>
+            <div class="flash" data-flash role="status" aria-live="polite"></div>
             {% block content %}{% endblock %}
         </main>
         <script src="{{ url_for('static', filename='js/app.js') }}"></script>

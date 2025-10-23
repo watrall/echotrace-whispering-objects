@@ -1,7 +1,48 @@
 {% extends 'base.html' %}
 {% block content %}
 <section>
-    <h2>Nodes</h2>
-    <p>Node monitoring will be added in a later chunk.</p>
+    <h2>Node Overview</h2>
+    {% if nodes %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Node</th>
+                    <th>Role</th>
+                    <th>Default Language</th>
+                    <th>Last Heartbeat (s)</th>
+                    <th>Assigned Fragment</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for node_id, meta in nodes.items() %}
+                    <tr>
+                        <td>{{ node_id }}</td>
+                        <td>{{ meta.role }}</td>
+                        <td>{{ meta.default_language }}</td>
+                        <td>{{ health.get(node_id, '—') }}</td>
+                        <td>
+                            {% set asset = assignments.get(node_id) %}
+                            {% if asset %}
+                                {{ asset.audio_path.name }}
+                            {% else %}
+                                <em>Not configured</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form class="inline" data-api="{{ url_for('api_push_config') }}" data-json-fields="payload" data-clear="true">
+                                <input type="hidden" name="node_id" value="{{ node_id }}">
+                                <textarea name="payload" placeholder='{"volume": 0.7}'></textarea>
+                                <button type="submit">Push Config</button>
+                            </form>
+                            <button class="secondary" type="button" data-reboot="{{ node_id }}">Reboot (log only)</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p><em>Select a content pack to list nodes.</em></p>
+    {% endif %}
 </section>
 {% endblock %}

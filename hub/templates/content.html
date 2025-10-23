@@ -2,6 +2,61 @@
 {% block content %}
 <section>
     <h2>Content Packs</h2>
-    <p>Content pack selection will be implemented in a later chunk.</p>
+    <form data-api="{{ url_for('api_select_pack') }}" data-refresh="true">
+        <label for="pack_name">Active pack</label>
+        <select id="pack_name" name="pack_name" required>
+            {% for name in pack_names %}
+                <option value="{{ name }}" {% if active_pack and active_pack.name == name %}selected{% endif %}>
+                    {{ name }}
+                </option>
+            {% endfor %}
+        </select>
+        <button type="submit">Load Pack</button>
+    </form>
+</section>
+
+<section>
+    <h2>Transcripts &amp; Audio</h2>
+    {% if active_pack %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Node</th>
+                    <th>Role</th>
+                    <th>Language</th>
+                    <th>Audio</th>
+                    <th>Transcript URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for node_id, meta in active_pack.nodes.items() %}
+                    {% for lang in ['en', 'fr', 'es'] %}
+                        {% set asset = active_pack.media.get((node_id, lang)) %}
+                        <tr>
+                            <td>{{ node_id }}</td>
+                            <td>{{ meta.role }}</td>
+                            <td>{{ lang }}</td>
+                            <td>
+                                {% if asset %}
+                                    {{ asset.audio_path.name }}
+                                {% else %}
+                                    <em>Not provided</em>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if asset %}
+                                    {{ active_pack.base_url }}/{{ asset.transcript_filename }}
+                                {% else %}
+                                    <em>Unavailable</em>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p><em>No pack selected.</em></p>
+    {% endif %}
 </section>
 {% endblock %}

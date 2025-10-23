@@ -1,7 +1,53 @@
 {% extends 'base.html' %}
 {% block content %}
 <section>
-    <h2>Accessibility Settings</h2>
-    <p>Accessibility controls will be configured in a later chunk.</p>
+    <h2>Accessibility Presets</h2>
+    <form data-api="{{ url_for('api_apply_preset') }}" data-clear="true">
+        <label for="preset_name">Choose preset</label>
+        <select id="preset_name" name="preset_name" required>
+            <option value="">Select…</option>
+            {% for name, values in profiles.presets.items() %}
+                <option value="{{ name }}">{{ name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Apply Preset</button>
+    </form>
+</section>
+
+<section>
+    <h2>Global Toggles</h2>
+    {% set global_settings = profiles.global or {} %}
+    <form data-api="{{ url_for('api_apply_preset') }}" data-wrap="global" data-booleans="captions,high_contrast,sensory_friendly,safety_limiter" data-json-fields="quiet_hours" data-refresh="true">
+        <div class="form-grid">
+            <label>
+                <input type="checkbox" name="captions" value="true" {% if global_settings.get('captions') %}checked{% endif %}>
+                Captions visibility
+            </label>
+            <label>
+                <input type="checkbox" name="high_contrast" value="true" {% if global_settings.get('high_contrast') %}checked{% endif %}>
+                High contrast theme
+            </label>
+            <label>
+                <input type="checkbox" name="sensory_friendly" value="true" {% if global_settings.get('sensory_friendly') %}checked{% endif %}>
+                Sensory-friendly mode
+            </label>
+            <label>
+                <input type="checkbox" name="safety_limiter" value="true" {% if global_settings.get('safety_limiter', True) %}checked{% endif %}>
+                Safety volume limiter
+            </label>
+        </div>
+        <label for="quiet_hours">Quiet hours (JSON array)</label>
+        <textarea id="quiet_hours" name="quiet_hours" placeholder='["20:00-09:00"]'>{{ global_settings.get('quiet_hours', []) | tojson }}</textarea>
+        <button type="submit">Save Toggles</button>
+    </form>
+</section>
+
+<section>
+    <h2>Per-Node Overrides</h2>
+    {% if profiles.per_node_overrides %}
+        <pre>{{ profiles.per_node_overrides | tojson(indent=2) }}</pre>
+    {% else %}
+        <p><em>No overrides configured yet.</em></p>
+    {% endif %}
 </section>
 {% endblock %}
