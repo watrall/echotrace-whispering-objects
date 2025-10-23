@@ -1,0 +1,11 @@
+[Unit]
+Description=EchoTrace Node Service (Scaffold)
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/env python3 -m pi_nodes.node_service
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,5 @@
+# Minimal configuration scaffold for the EchoTrace hub.
+broker_host: localhost
+broker_port: 1883
+dashboard_host: 127.0.0.1
+dashboard_port: 8080

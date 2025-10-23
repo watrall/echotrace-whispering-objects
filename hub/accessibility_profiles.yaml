@@ -1,0 +1,9 @@
+# Initial accessibility profile configuration.
+global:
+  captions: false
+  high_contrast: false
+  sensory_friendly: false
+  safety_limiter: true
+  quiet_hours: []
+presets: {}
+per_node_overrides: {}

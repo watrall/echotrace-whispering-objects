@@ -1,0 +1,4 @@
+# Minimal node configuration scaffold.
+node_id: node1
+role: whisper
+language_default: en

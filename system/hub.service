@@ -1,0 +1,11 @@
+[Unit]
+Description=EchoTrace Hub Service (Scaffold)
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/env python3 -m hub.hub_listener
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
