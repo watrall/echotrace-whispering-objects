@@ -1,9 +1,21 @@
-# Initial accessibility profile configuration.
+# Accessibility configuration defaults for the EchoTrace hub.
 global:
   captions: false
-  high_contrast: false
+  high_contrast: true
   sensory_friendly: false
   safety_limiter: true
   quiet_hours: []
-presets: {}
+presets:
+  hard_of_hearing:
+    captions: true
+    sensory_friendly: false
+    safety_limiter: true
+  low_vision:
+    captions: true
+    high_contrast: true
+  sensory_friendly:
+    sensory_friendly: true
+    safety_limiter: true
+  mobility_aware:
+    mobility_buffer_ms: 1000
 per_node_overrides: {}

@@ -1,4 +1,23 @@
-# Minimal node configuration scaffold.
+# Default node configuration template.
 node_id: node1
 role: whisper
 language_default: en
+gpio:
+  led_pin: 18
+  haptic_pin: 23
+proximity:
+  min_mm: 100
+  max_mm: 1200
+  story_threshold_mm: 700
+  hysteresis_mm: 50
+audio:
+  fragment_file: ""
+  volume: 0.7
+accessibility:
+  captions: false
+  visual_pulse: false
+  proximity_glow: true
+  mobility_buffer_ms: 800
+  repeat: 0
+  pace: 1.0
+  safety_limiter: true

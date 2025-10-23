@@ -18,3 +18,4 @@ dist/
 hub/logs/
 logs/
 audio/
+node.log

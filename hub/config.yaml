@@ -1,5 +1,16 @@
-# Minimal configuration scaffold for the EchoTrace hub.
+# EchoTrace hub configuration defaults.
 broker_host: localhost
 broker_port: 1883
-dashboard_host: 127.0.0.1
+dashboard_host: 0.0.0.0
 dashboard_port: 8080
+default_language: en
+logs_dir: hub/logs
+analytics:
+  enable_csv: true
+  rotation_daily: true
+narrative:
+  required_fragments_to_unlock: 4
+security:
+  require_basic_auth: true
+  admin_user_env: ECHOTRACE_ADMIN_USER
+  admin_pass_env: ECHOTRACE_ADMIN_PASS

@@ -16,5 +16,6 @@ def test_node_service_run_once(tmp_path: Path) -> None:
     heartbeat = service.run_once()
 
     assert heartbeat["node_id"] == "test-node"
+    assert heartbeat["role"] == "whisper"
     assert "distance_mm" in heartbeat
     assert "timestamp" in heartbeat
