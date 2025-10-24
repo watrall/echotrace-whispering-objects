@@ -38,7 +38,12 @@ def mock_hardware_modules() -> Generator[None, None, None]:
                 self.active_high = active_high
                 self.state = False
 
-            def blink(self, on_time: float, off_time: float, n: int | None = None) -> None:  # noqa: ARG002
+            def blink(
+                self,
+                on_time: float,
+                off_time: float,
+                n: int | None = None,
+            ) -> None:  # noqa: ARG002
                 self.state = True
 
             def on(self) -> None:
@@ -99,4 +104,3 @@ def mock_hardware_modules() -> Generator[None, None, None]:
     finally:
         for module_name in created_modules:
             sys.modules.pop(module_name, None)
-
