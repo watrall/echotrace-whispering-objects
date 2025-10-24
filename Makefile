@@ -17,7 +17,7 @@ test:
 	pytest
 
 run-hub:
-	$(PYTHON) -m hub.dashboard_app
+	$(PYTHON) -m hub.run_hub
 
 run-node:
 	$(PYTHON) -m pi_nodes.node_service

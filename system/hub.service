@@ -1,11 +1,16 @@
 [Unit]
-Description=EchoTrace Hub Service (Scaffold)
-After=network-online.target
+Description=EchoTrace Hub Service
+After=network-online.target mosquitto.service
+Wants=network-online.target mosquitto.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/env python3 -m hub.hub_listener
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/etc/default/echotrace
+WorkingDirectory=/opt/echotrace
+ExecStart=/usr/bin/env python3 -m hub.run_hub
 Restart=on-failure
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
