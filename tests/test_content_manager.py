@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
+import yaml  # type: ignore[import]
 
 from hub.content_manager import ContentManager
 
@@ -43,6 +43,7 @@ def test_content_manager_loads_pack(tmp_path: Path) -> None:
     assert fragment_path == audio_dir / "object1_en.mp3"
 
     transcript_url = manager.get_transcript_url("object1", "en")
+    assert transcript_url is not None
     assert transcript_url.endswith("/object1_en.html")
 
 

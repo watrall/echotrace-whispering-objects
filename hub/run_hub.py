@@ -54,7 +54,7 @@ def main() -> None:
         config.dashboard_port,
     )
 
-    def shutdown_handler(_signum, _frame) -> None:
+    def shutdown_handler(_signum: int, _frame: object | None) -> None:
         LOGGER.info("Shutdown signal received; stopping services.")
         HUB_LISTENER.stop()
         sys.exit(0)
@@ -66,7 +66,8 @@ def main() -> None:
     try:
         run_server(config)
     finally:
-        HUB_LISTENER.stop()
+        if HUB_LISTENER is not None:
+            HUB_LISTENER.stop()
 
 
 if __name__ == "__main__":  # pragma: no cover - script execution

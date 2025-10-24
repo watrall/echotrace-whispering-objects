@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, Tuple
 
 import pytest
-import yaml
+import yaml  # type: ignore[import]
 
 
 class FakeHubController:

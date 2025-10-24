@@ -8,10 +8,11 @@ import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional, TypeVar, Union, cast
 
 from flask import (
     Flask,
+    Request,
     Response,
     abort,
     jsonify,
@@ -123,12 +124,20 @@ def create_app(config: HubConfig | None = None, hub_controller: Any | None = Non
     app.config["ADMIN_CREDENTIALS"] = credentials
 
     def get_context() -> DashboardContext:
-        return app.config["DASHBOARD_CONTEXT"]
+        return cast(DashboardContext, app.config["DASHBOARD_CONTEXT"])
 
-    def require_auth(func):
+    RouteReturn = Union[
+        Response,
+        str,
+        tuple[Response, int],
+        tuple[Response, int, dict[str, Any]],
+    ]
+    F = TypeVar("F", bound=Callable[..., RouteReturn])
+
+    def require_auth(func: F) -> F:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            expected = app.config.get("ADMIN_CREDENTIALS")
+        def wrapper(*args: Any, **kwargs: Any) -> RouteReturn:
+            expected = cast(Optional[tuple[str, str]], app.config.get("ADMIN_CREDENTIALS"))
             if not expected:
                 return func(*args, **kwargs)
             auth = request.authorization
@@ -141,7 +150,7 @@ def create_app(config: HubConfig | None = None, hub_controller: Any | None = Non
                 return _auth_required_response()
             return func(*args, **kwargs)
 
-        return wrapper
+        return cast(F, wrapper)
 
     @app.context_processor
     def inject_globals() -> dict[str, Any]:
@@ -345,7 +354,7 @@ def create_app(config: HubConfig | None = None, hub_controller: Any | None = Non
 
     @app.route("/api/analytics/summary")
     @require_auth
-    def api_analytics_summary() -> Response:
+    def api_analytics_summary() -> Response | tuple[Response, int]:
         ctx = get_context()
         summary = summarize_events(ctx.config.logs_dir)
         if summary is None:
@@ -391,7 +400,7 @@ def _auth_required_response() -> Response:
     return response
 
 
-def _require_json(req) -> dict[str, Any]:
+def _require_json(req: Request) -> dict[str, Any]:
     if not req.is_json:
         abort(400, description="Expected JSON body.")
     data = req.get_json()
@@ -404,6 +413,7 @@ def _require_field(data: dict[str, Any], field: str) -> str:
     value = data.get(field)
     if not value or not isinstance(value, str):
         abort(400, description=f"Field '{field}' is required.")
+    assert isinstance(value, str)
     return value
 
 

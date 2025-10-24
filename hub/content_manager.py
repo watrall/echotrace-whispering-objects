@@ -6,6 +6,7 @@ import logging
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import yaml  # type: ignore[import]
 
@@ -151,27 +152,36 @@ class ContentManager:
 
     def _parse_nodes(self, raw_nodes: Iterable | Mapping) -> dict[str, dict[str, str]]:
         nodes: dict[str, dict[str, str]] = {}
+        iterable: Iterable[tuple[Any, Mapping[str, Any]]]
+
         if isinstance(raw_nodes, Mapping):
-            iterator = raw_nodes.items()
+            iterable = raw_nodes.items()
         elif isinstance(raw_nodes, list):
-            iterator = ((item.get("id"), item) for item in raw_nodes if isinstance(item, Mapping))
+            iterable = (
+                (item.get("id"), item)
+                for item in raw_nodes
+                if isinstance(item, Mapping)
+            )
         else:
             LOGGER.warning("Unexpected nodes structure in content pack metadata.")
             return nodes
 
-        for node_id, node_meta in iterator:
-            if not node_id or not isinstance(node_meta, Mapping):
+        for node_id_raw, node_meta in iterable:
+            if not isinstance(node_id_raw, str):
+                LOGGER.warning("Invalid node identifier: %s", node_id_raw)
+                continue
+            if not isinstance(node_meta, Mapping):
                 LOGGER.warning("Invalid node entry encountered: %s", node_meta)
                 continue
             role = str(node_meta.get("role", "")).strip()
             default_lang = str(node_meta.get("default_language", "")).strip()
             if role not in {"whisper", "mystery"}:
-                LOGGER.warning("Node '%s' has unsupported role '%s'.", node_id, role)
+                LOGGER.warning("Node '%s' has unsupported role '%s'.", node_id_raw, role)
                 continue
             if not default_lang:
-                LOGGER.warning("Node '%s' missing default_language.", node_id)
+                LOGGER.warning("Node '%s' missing default_language.", node_id_raw)
                 continue
-            nodes[node_id] = {
+            nodes[node_id_raw] = {
                 "role": role,
                 "default_language": default_lang,
             }

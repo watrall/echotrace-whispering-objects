@@ -3,15 +3,21 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING
 
 try:  # pragma: no cover - executed when gpiozero is installed
-    from gpiozero import PWMLED
+    from gpiozero import PWMLED as _HardwarePWMLED
 except ImportError:  # pragma: no cover - executed in test/mock environments
-    class PWMLED:  # type: ignore[too-many-instance-attributes]
+    _HardwarePWMLED = None  # type: ignore[assignment]
+
+if TYPE_CHECKING:  # pragma: no cover - typing aid only
+    from gpiozero import PWMLED as _PWMLEDBase  # type: ignore
+else:
+
+    class _PWMLEDBase:  # type: ignore[too-many-instance-attributes]
         """Very small fallback implementation for environments without gpiozero."""
 
-        def __init__(self, pin: int, frequency: Optional[int] = None) -> None:  # noqa: D401
+        def __init__(self, pin: int, frequency: int | None = None) -> None:  # noqa: D401
             self.pin = pin
             self.frequency = frequency
             self.value = 0.0
@@ -36,7 +42,10 @@ class LedFeedback:
     """Simple wrapper around PWMLED supporting glow, blink, and off states."""
 
     def __init__(self, pin: int, frequency: int = 100) -> None:
-        self._led = PWMLED(pin, frequency=frequency)
+        if _HardwarePWMLED is not None:
+            self._led: _PWMLEDBase = _HardwarePWMLED(pin, frequency=frequency)
+        else:
+            self._led = _PWMLEDBase(pin, frequency=frequency)
         LOGGER.debug("LedFeedback initialised on pin %s", pin)
 
     def glow(self, level: float) -> None:

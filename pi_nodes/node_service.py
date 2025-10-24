@@ -7,7 +7,7 @@ import logging
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
 
 import yaml  # type: ignore[import]
 
@@ -15,6 +15,13 @@ try:  # pragma: no cover - exercised only on devices with MQTT client installed
     import paho.mqtt.client as mqtt
 except ImportError:  # pragma: no cover - development fallback
     mqtt = None  # type: ignore[assignment]
+
+if TYPE_CHECKING:  # pragma: no cover - typing aid only
+    from paho.mqtt.client import Client as MQTTClient  # type: ignore[import]
+    from paho.mqtt.client import MQTTMessage  # type: ignore[import]
+else:
+    MQTTClient = Any
+    MQTTMessage = Any
 
 from .audio_player import AudioPlayer
 from .haptics import Haptics
@@ -281,10 +288,10 @@ class NodeService:
 
     def _on_connect(
         self,
-        client,
-        _userdata,
-        _flags,
-        rc,
+        client: MQTTClient,
+        _userdata: Any,
+        _flags: Any,
+        rc: int,
     ) -> None:  # pragma: no cover - requires broker
         if rc != 0:
             LOGGER.error("MQTT connection failed with rc=%s", rc)
@@ -295,9 +302,9 @@ class NodeService:
 
     def _on_message(
         self,
-        _client,
-        _userdata,
-        message,
+        _client: MQTTClient,
+        _userdata: Any,
+        message: MQTTMessage,
     ) -> None:  # pragma: no cover - requires broker
         payload = message.payload.decode("utf-8") if message.payload else ""
         self.handle_mqtt_message(message.topic, payload)
