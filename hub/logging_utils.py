@@ -91,7 +91,10 @@ class CsvEventLogger:
         try:
             self.close()
         except Exception:
-            LOGGER.debug("Error while closing CsvEventLogger during garbage collection.", exc_info=True)
+            LOGGER.debug(
+                "Error while closing CsvEventLogger during garbage collection.",
+                exc_info=True,
+            )
 
 
 @dataclass

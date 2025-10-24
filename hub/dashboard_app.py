@@ -8,9 +8,19 @@ import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
-from flask import Flask, Response, abort, jsonify, redirect, render_template, request, send_file, url_for
+from flask import (
+    Flask,
+    Response,
+    abort,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+)
 
 from .accessibility_store import (
     ACCESSIBILITY_PATH,
@@ -137,10 +147,11 @@ def create_app(config: HubConfig | None = None, hub_controller: Any | None = Non
     def inject_globals() -> Dict[str, Any]:
         ctx = get_context()
         accessibility_global = ctx.accessibility.get("global", {})
+        global_view = accessibility_global if isinstance(accessibility_global, dict) else {}
         return {
             "hub_config": ctx.config,
             "accessibility_profiles": ctx.accessibility,
-            "accessibility_global": accessibility_global if isinstance(accessibility_global, dict) else {},
+            "accessibility_global": global_view,
             "active_pack": ctx.current_pack,
         }
 

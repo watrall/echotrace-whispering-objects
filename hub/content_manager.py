@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Any
 
 import yaml
 
@@ -27,21 +28,25 @@ class ContentPack:
 
     name: str
     root: Path
-    nodes: Dict[str, Dict[str, str]]
-    media: Dict[Tuple[str, str], MediaAsset]
+    nodes: dict[str, dict[str, str]]
+    media: dict[tuple[str, str], MediaAsset]
     base_url: str
 
 
 class ContentManager:
     """Provide helpers for locating and loading content packs."""
 
-    def __init__(self, packs_root: Path | None = None, transcripts_base: str = "/transcripts") -> None:
+    def __init__(
+        self,
+        packs_root: Path | None = None,
+        transcripts_base: str = "/transcripts",
+    ) -> None:
         self._packs_root = packs_root or Path("content-packs")
         self._packs_root.mkdir(parents=True, exist_ok=True)
         self._transcripts_base = transcripts_base.rstrip("/")
-        self._active_pack: Optional[ContentPack] = None
+        self._active_pack: ContentPack | None = None
 
-    def list_packs(self) -> List[str]:
+    def list_packs(self) -> list[str]:
         """Return discovered content pack directory names."""
         if not self._packs_root.exists():
             return []
@@ -78,7 +83,7 @@ class ContentManager:
         self._active_pack = pack
         return pack
 
-    def get_fragment_for_node(self, node_id: str, language: str) -> Optional[Path]:
+    def get_fragment_for_node(self, node_id: str, language: str) -> Path | None:
         """Return the audio fragment path for a given node and language."""
         pack = self._require_active_pack()
         asset = self._resolve_media_asset(pack, node_id, language)
@@ -89,7 +94,7 @@ class ContentManager:
             return None
         return asset.audio_path
 
-    def get_transcript_url(self, node_id: str, language: str) -> Optional[str]:
+    def get_transcript_url(self, node_id: str, language: str) -> str | None:
         """Return the HTTP URL for a transcript, if available."""
         pack = self._require_active_pack()
         asset = self._resolve_media_asset(pack, node_id, language)
@@ -115,7 +120,7 @@ class ContentManager:
         pack: ContentPack,
         node_id: str,
         language: str,
-    ) -> Optional[MediaAsset]:
+    ) -> MediaAsset | None:
         asset = pack.media.get((node_id, language))
         if asset:
             return asset
@@ -140,8 +145,8 @@ class ContentManager:
             )
         return asset
 
-    def _parse_nodes(self, raw_nodes: Iterable | Mapping) -> Dict[str, Dict[str, str]]:
-        nodes: Dict[str, Dict[str, str]] = {}
+    def _parse_nodes(self, raw_nodes: Iterable | Mapping) -> dict[str, dict[str, str]]:
+        nodes: dict[str, dict[str, str]] = {}
         if isinstance(raw_nodes, Mapping):
             iterator = raw_nodes.items()
         elif isinstance(raw_nodes, list):
@@ -172,8 +177,8 @@ class ContentManager:
         self,
         pack_path: Path,
         raw_media: Mapping[str, Mapping[str, Mapping[str, str]]],
-    ) -> Dict[Tuple[str, str], MediaAsset]:
-        media: Dict[Tuple[str, str], MediaAsset] = {}
+    ) -> dict[tuple[str, str], MediaAsset]:
+        media: dict[tuple[str, str], MediaAsset] = {}
         if not isinstance(raw_media, Mapping):
             LOGGER.warning("Media section missing or malformed in pack metadata.")
             return media

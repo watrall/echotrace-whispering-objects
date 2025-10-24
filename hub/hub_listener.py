@@ -107,7 +107,12 @@ class HubListener:
         finally:
             self.stop()
 
-    def push_node_config(self, node_id: str, payload: Dict[str, object], timeout: float = 5.0) -> bool:
+    def push_node_config(
+        self,
+        node_id: str,
+        payload: Dict[str, object],
+        timeout: float = 5.0,
+    ) -> bool:
         """Publish configuration updates to a node and await acknowledgement."""
         if not isinstance(payload, dict):
             raise ValueError("Node configuration payload must be a dictionary.")
@@ -160,7 +165,13 @@ class HubListener:
 
     # MQTT callbacks -----------------------------------------------------
 
-    def _on_connect(self, client: mqtt.Client, _userdata: object, _flags: Dict[str, int], rc: int) -> None:
+    def _on_connect(
+        self,
+        client: mqtt.Client,
+        _userdata: object,
+        _flags: Dict[str, int],
+        rc: int,
+    ) -> None:
         if rc != 0:
             LOGGER.error("Failed to connect to MQTT broker (rc=%s).", rc)
             return
@@ -169,7 +180,12 @@ class HubListener:
         client.subscribe(trigger_wildcard())
         client.subscribe(ack_wildcard())
 
-    def _on_message(self, _client: mqtt.Client, _userdata: object, message: mqtt.MQTTMessage) -> None:
+    def _on_message(
+        self,
+        _client: mqtt.Client,
+        _userdata: object,
+        message: mqtt.MQTTMessage,
+    ) -> None:
         topic = message.topic or ""
         payload = message.payload.decode("utf-8") if message.payload else ""
         if topic.startswith(_HEALTH_PREFIX):
@@ -217,7 +233,11 @@ class HubListener:
         self.publish_state()
         unlocked_after = self._narrative.unlocked
         if unlocked_after and not unlocked_before:
-            self._event_logger.record_event("narrative_unlocked", node_id, "Unlock threshold reached")
+            self._event_logger.record_event(
+                "narrative_unlocked",
+                node_id,
+                "Unlock threshold reached",
+            )
             LOGGER.info("Narrative unlocked after trigger from %s.", node_id)
 
     def _handle_ack(self, node_id: str, payload: str) -> None:

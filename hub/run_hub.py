@@ -48,7 +48,11 @@ def main() -> None:
     global HUB_LISTENER  # type: ignore[global-variable-not-assigned]
     HUB_LISTENER = HubListener(config=config)
     HUB_LISTENER.start()
-    LOGGER.info("Hub listener initialised; launching dashboard on %s:%s", config.dashboard_host, config.dashboard_port)
+    LOGGER.info(
+        "Hub listener initialised; launching dashboard on %s:%s",
+        config.dashboard_host,
+        config.dashboard_port,
+    )
 
     def shutdown_handler(_signum, _frame) -> None:
         LOGGER.info("Shutdown signal received; stopping services.")

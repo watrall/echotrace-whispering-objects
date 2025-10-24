@@ -65,7 +65,12 @@ class AudioPlayer:
         try:
             mixer.music.load(str(self._loaded_path))  # type: ignore[union-attr]
             mixer.music.play(loops)  # type: ignore[union-attr]
-            LOGGER.debug("Playback started for %s (loops=%s pace=%.2f).", self._loaded_path, loops, pace)
+            LOGGER.debug(
+                "Playback started for %s (loops=%s pace=%.2f).",
+                self._loaded_path,
+                loops,
+                pace,
+            )
         except Exception as exc:  # pragma: no cover
             LOGGER.error("Failed to play audio %s: %s", self._loaded_path, exc)
 

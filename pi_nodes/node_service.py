@@ -279,7 +279,13 @@ class NodeService:
         except Exception as exc:  # pragma: no cover - requires broker
             LOGGER.error("Failed to connect to MQTT broker: %s", exc)
 
-    def _on_connect(self, client, _userdata, _flags, rc) -> None:  # pragma: no cover - requires broker
+    def _on_connect(
+        self,
+        client,
+        _userdata,
+        _flags,
+        rc,
+    ) -> None:  # pragma: no cover - requires broker
         if rc != 0:
             LOGGER.error("MQTT connection failed with rc=%s", rc)
             return
@@ -287,7 +293,12 @@ class NodeService:
         if self.config.role == "mystery":
             client.subscribe(hub_state_topic())
 
-    def _on_message(self, _client, _userdata, message) -> None:  # pragma: no cover - requires broker
+    def _on_message(
+        self,
+        _client,
+        _userdata,
+        message,
+    ) -> None:  # pragma: no cover - requires broker
         payload = message.payload.decode("utf-8") if message.payload else ""
         self.handle_mqtt_message(message.topic, payload)
 
@@ -364,7 +375,11 @@ class NodeService:
         try:
             return Haptics(self.config.haptic_pin)
         except Exception as exc:  # pragma: no cover - hardware only
-            LOGGER.warning("Unable to initialise haptics on pin %s: %s", self.config.haptic_pin, exc)
+            LOGGER.warning(
+                "Unable to initialise haptics on pin %s: %s",
+                self.config.haptic_pin,
+                exc,
+            )
             return None
 
     # ------------------------------------------------------------------ Runtime loop

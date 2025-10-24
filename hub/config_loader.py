@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import yaml
 
@@ -34,7 +35,7 @@ class SecurityConfig:
 
     require_basic_auth: bool = True
     admin_user_env: str = "ECHOTRACE_ADMIN_USER"
-    admin_pass_env: str = "ECHOTRACE_ADMIN_PASS"
+    admin_pass_env: str = "ECHOTRACE_ADMIN_PASS"  # noqa: S105 - environment variable name
 
 
 @dataclass(frozen=True)
@@ -75,7 +76,7 @@ def load_config(path: Path | None = None) -> HubConfig:
 
     broker_host = _require_str(parsed, "broker_host", default="localhost")
     broker_port = _require_int(parsed, "broker_port", default=1883, minimum=1)
-    dashboard_host = _require_str(parsed, "dashboard_host", default="0.0.0.0")
+    dashboard_host = _require_str(parsed, "dashboard_host", default="0.0.0.0")  # noqa: S104
     dashboard_port = _require_int(parsed, "dashboard_port", default=8080, minimum=1)
     default_language = _require_str(parsed, "default_language", default="en")
     logs_dir_raw = _require_str(parsed, "logs_dir", default="hub/logs")
@@ -124,12 +125,12 @@ def _load_security(section: Any) -> SecurityConfig:
     )
 
 
-def _coerce_mapping(value: Any, label: str) -> Mapping[str, Any]:
+def _coerce_mapping(value: Any, label: str) -> dict[str, Any]:
     if value is None:
         return {}
     if not isinstance(value, Mapping):
         raise ConfigError(f"Section '{label}' must be a mapping/object.")
-    return value
+    return dict(value)
 
 
 def _require_str(source: Mapping[str, Any], key: str, default: str | None = None) -> str:

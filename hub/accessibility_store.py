@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import yaml
 
 ACCESSIBILITY_PATH = Path(__file__).resolve().parent / "accessibility_profiles.yaml"
 
 
-def load_profiles(path: Path | None = None) -> Dict[str, Any]:
+def load_profiles(path: Path | None = None) -> dict[str, Any]:
     """Load accessibility profiles from disk."""
     target = path or ACCESSIBILITY_PATH
     if not target.exists():
@@ -26,7 +26,7 @@ def load_profiles(path: Path | None = None) -> Dict[str, Any]:
     return data
 
 
-def save_profiles(profiles: Dict[str, Any], path: Path | None = None) -> None:
+def save_profiles(profiles: dict[str, Any], path: Path | None = None) -> None:
     """Persist accessibility profiles to disk."""
     target = path or ACCESSIBILITY_PATH
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -34,7 +34,7 @@ def save_profiles(profiles: Dict[str, Any], path: Path | None = None) -> None:
         yaml.safe_dump(profiles, handle, sort_keys=True)
 
 
-def apply_preset(profiles: Dict[str, Any], preset_name: str) -> Dict[str, Any]:
+def apply_preset(profiles: dict[str, Any], preset_name: str) -> dict[str, Any]:
     """Apply a preset to the global accessibility configuration."""
     presets = profiles.get("presets", {})
     if preset_name not in presets:
@@ -50,10 +50,10 @@ def apply_preset(profiles: Dict[str, Any], preset_name: str) -> Dict[str, Any]:
 
 
 def set_per_node_override(
-    profiles: Dict[str, Any],
+    profiles: dict[str, Any],
     node_id: str,
-    overrides: Dict[str, Any],
-) -> Dict[str, Any]:
+    overrides: dict[str, Any],
+) -> dict[str, Any]:
     """Persist per-node overrides, removing entries when overrides are empty."""
     per_node = profiles.setdefault("per_node_overrides", {})
     if not isinstance(per_node, dict):
@@ -67,14 +67,14 @@ def set_per_node_override(
 
 
 def derive_runtime_payloads(
-    profiles: Dict[str, Any],
+    profiles: dict[str, Any],
     nodes: Mapping[str, Any],
-) -> Dict[str, Dict[str, Any]]:
+) -> dict[str, dict[str, Any]]:
     """Return node-specific configuration payloads derived from accessibility settings."""
     global_settings = _ensure_mapping(profiles.get("global"))
     overrides = _ensure_mapping(profiles.get("per_node_overrides"))
 
-    payloads: Dict[str, Dict[str, Any]] = {}
+    payloads: dict[str, dict[str, Any]] = {}
     for node_id in nodes.keys():
         node_override = _ensure_mapping(overrides.get(node_id))
         payloads[node_id] = _build_node_payload(global_settings, node_override)
@@ -82,18 +82,24 @@ def derive_runtime_payloads(
 
 
 def _build_node_payload(
-    global_settings: Dict[str, Any],
-    node_override: Dict[str, Any],
-) -> Dict[str, Any]:
+    global_settings: dict[str, Any],
+    node_override: dict[str, Any],
+) -> dict[str, Any]:
     captions = bool(node_override.get("captions", global_settings.get("captions", False)))
     visual_pulse = bool(node_override.get("visual_pulse", False))
     proximity_glow = bool(node_override.get("proximity_glow", True))
     default_buffer = _clamp_int(global_settings.get("mobility_buffer_ms", 800), 0, 60000)
-    mobility_buffer_ms = _clamp_int(node_override.get("mobility_buffer_ms", default_buffer), 0, 60000)
+    mobility_buffer_ms = _clamp_int(
+        node_override.get("mobility_buffer_ms", default_buffer),
+        0,
+        60000,
+    )
     repeat = _clamp_int(node_override.get("repeat", 0), 0, 2)
     base_pace = 0.9 if global_settings.get("sensory_friendly") else 1.0
     pace = _clamp_float(node_override.get("pace", base_pace), 0.85, 1.15)
-    safety_limiter = bool(node_override.get("safety_limiter", global_settings.get("safety_limiter", True)))
+    safety_limiter = bool(
+        node_override.get("safety_limiter", global_settings.get("safety_limiter", True))
+    )
 
     volume = node_override.get("volume")
     if volume is None:
@@ -120,7 +126,7 @@ def _build_node_payload(
     }
 
 
-def _ensure_mapping(candidate: Any) -> Dict[str, Any]:
+def _ensure_mapping(candidate: Any) -> dict[str, Any]:
     if isinstance(candidate, Mapping):
         return dict(candidate)
     return {}
