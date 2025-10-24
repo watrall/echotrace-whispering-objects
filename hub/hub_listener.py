@@ -16,7 +16,7 @@ except ImportError:  # pragma: no cover - executed in environments without paho-
     mqtt = None  # type: ignore[assignment]
 
 from .config_loader import HubConfig, load_config
-from .logging_utils import CsvEventLogger
+from .event_logging import CsvEventLogger
 from .mqtt_topics import (
     ack_wildcard,
     health_topic,

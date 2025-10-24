@@ -32,7 +32,7 @@ from .accessibility_store import (
 )
 from .config_loader import HubConfig, load_config
 from .content_manager import ContentManager, ContentPack, MediaAsset
-from .logging_utils import CsvEventLogger, summarize_events
+from .event_logging import CsvEventLogger, summarize_events
 from .narrative_state import NarrativeState
 
 

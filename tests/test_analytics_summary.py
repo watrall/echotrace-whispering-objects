@@ -6,7 +6,7 @@ import csv
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from hub.logging_utils import summarize_events
+from hub.event_logging import summarize_events
 
 
 def _write_log(log_path: Path) -> None:
