@@ -42,10 +42,10 @@ class DashboardContext:
 
     config: HubConfig
     content_manager: ContentManager
-    accessibility: Dict[str, Any]
+    accessibility: dict[str, Any]
     narrative_state: NarrativeState
-    current_pack: Optional[ContentPack] = None
-    health_snapshot: Dict[str, float] = field(default_factory=dict)
+    current_pack: ContentPack | None = None
+    health_snapshot: dict[str, float] = field(default_factory=dict)
     hub_controller: Optional[Any] = None
 
     def select_pack(self, pack_name: str) -> ContentPack:
@@ -56,7 +56,7 @@ class DashboardContext:
     def reload_accessibility(self) -> None:
         self.accessibility = load_profiles(ACCESSIBILITY_PATH)
 
-    def push_config_to_node(self, node_id: str, payload: Dict[str, Any]) -> bool:
+    def push_config_to_node(self, node_id: str, payload: dict[str, Any]) -> bool:
         controller = self.hub_controller
         if controller is None:
             logging.getLogger(__name__).debug(
@@ -70,11 +70,11 @@ class DashboardContext:
             logging.getLogger(__name__).warning("Failed to push config to %s: %s", node_id, exc)
             return False
 
-    def push_accessibility_configs(self) -> Dict[str, bool]:
+    def push_accessibility_configs(self) -> dict[str, bool]:
         if not self.current_pack:
             return {}
         payloads = derive_runtime_payloads(self.accessibility, self.current_pack.nodes)
-        results: Dict[str, bool] = {}
+        results: dict[str, bool] = {}
         for node_id, payload in payloads.items():
             results[node_id] = self.push_config_to_node(node_id, payload)
         return results
@@ -144,7 +144,7 @@ def create_app(config: HubConfig | None = None, hub_controller: Any | None = Non
         return wrapper
 
     @app.context_processor
-    def inject_globals() -> Dict[str, Any]:
+    def inject_globals() -> dict[str, Any]:
         ctx = get_context()
         accessibility_global = ctx.accessibility.get("global", {})
         global_view = accessibility_global if isinstance(accessibility_global, dict) else {}
@@ -181,7 +181,7 @@ def create_app(config: HubConfig | None = None, hub_controller: Any | None = Non
         pack = ctx.current_pack
         nodes = pack.nodes if pack else {}
         health = ctx.health_snapshot
-        assignments: Dict[str, MediaAsset] = {}
+        assignments: dict[str, MediaAsset] = {}
         if pack:
             for (node_id, lang), asset in pack.media.items():
                 default_lang = nodes.get(node_id, {}).get("default_language")
@@ -391,7 +391,7 @@ def _auth_required_response() -> Response:
     return response
 
 
-def _require_json(req) -> Dict[str, Any]:
+def _require_json(req) -> dict[str, Any]:
     if not req.is_json:
         abort(400, description="Expected JSON body.")
     data = req.get_json()
@@ -400,7 +400,7 @@ def _require_json(req) -> Dict[str, Any]:
     return data
 
 
-def _require_field(data: Dict[str, Any], field: str) -> str:
+def _require_field(data: dict[str, Any], field: str) -> str:
     value = data.get(field)
     if not value or not isinstance(value, str):
         abort(400, description=f"Field '{field}' is required.")

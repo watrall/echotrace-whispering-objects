@@ -6,7 +6,6 @@ import logging
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import yaml
 
@@ -90,7 +89,12 @@ class ContentManager:
         if asset is None:
             return None
         if not asset.audio_path.is_file():
-            LOGGER.warning("Audio asset missing for %s (%s): %s", node_id, language, asset.audio_path)
+            LOGGER.warning(
+                "Audio asset missing for %s (%s): %s",
+                node_id,
+                language,
+                asset.audio_path,
+            )
             return None
         return asset.audio_path
 
