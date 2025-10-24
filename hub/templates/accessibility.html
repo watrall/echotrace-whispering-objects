@@ -17,37 +17,133 @@
 <section>
     <h2>Global Toggles</h2>
     {% set global_settings = profiles.global or {} %}
-    <form data-api="{{ url_for('api_apply_preset') }}" data-wrap="global" data-booleans="captions,high_contrast,sensory_friendly,safety_limiter" data-json-fields="quiet_hours" data-refresh="true">
+    <form
+        data-api="{{ url_for('api_apply_preset') }}"
+        data-booleans="global.captions,global.high_contrast,global.sensory_friendly,global.safety_limiter"
+        data-json-fields="global.quiet_hours"
+        data-ints="global.mobility_buffer_ms"
+        data-refresh="true"
+    >
         <div class="form-grid">
             <label>
-                <input type="checkbox" name="captions" value="true" {% if global_settings.get('captions') %}checked{% endif %}>
+                <input type="checkbox" name="global.captions" value="true" {% if global_settings.get('captions') %}checked{% endif %}>
                 Captions visibility
             </label>
             <label>
-                <input type="checkbox" name="high_contrast" value="true" {% if global_settings.get('high_contrast') %}checked{% endif %}>
+                <input type="checkbox" name="global.high_contrast" value="true" {% if global_settings.get('high_contrast') %}checked{% endif %}>
                 High contrast theme
             </label>
             <label>
-                <input type="checkbox" name="sensory_friendly" value="true" {% if global_settings.get('sensory_friendly') %}checked{% endif %}>
+                <input type="checkbox" name="global.sensory_friendly" value="true" {% if global_settings.get('sensory_friendly') %}checked{% endif %}>
                 Sensory-friendly mode
             </label>
             <label>
-                <input type="checkbox" name="safety_limiter" value="true" {% if global_settings.get('safety_limiter', True) %}checked{% endif %}>
+                <input type="checkbox" name="global.safety_limiter" value="true" {% if global_settings.get('safety_limiter', True) %}checked{% endif %}>
                 Safety volume limiter
+            </label>
+            <label>
+                Mobility buffer (ms)
+                <input
+                    type="number"
+                    min="0"
+                    step="50"
+                    name="global.mobility_buffer_ms"
+                    value="{{ global_settings.get('mobility_buffer_ms', 800) }}"
+                >
             </label>
         </div>
         <label for="quiet_hours">Quiet hours (JSON array)</label>
-        <textarea id="quiet_hours" name="quiet_hours" placeholder='["20:00-09:00"]'>{{ global_settings.get('quiet_hours', []) | tojson }}</textarea>
+        <textarea id="quiet_hours" name="global.quiet_hours" placeholder='["20:00-09:00"]'>{{ global_settings.get('quiet_hours', []) | tojson }}</textarea>
         <button type="submit">Save Toggles</button>
     </form>
 </section>
 
 <section>
     <h2>Per-Node Overrides</h2>
-    {% if profiles.per_node_overrides %}
-        <pre>{{ profiles.per_node_overrides | tojson(indent=2) }}</pre>
+    {% if nodes %}
+        {% for node_id, meta in nodes.items() %}
+            {% set node_overrides = profiles.per_node_overrides.get(node_id, {}) %}
+            <div>
+                <h3>{{ node_id }} <small>({{ meta.role }})</small></h3>
+                <form
+                    data-api="{{ url_for('api_accessibility_override') }}"
+                    data-booleans="overrides.captions,overrides.visual_pulse,overrides.proximity_glow,overrides.safety_limiter"
+                    data-ints="overrides.mobility_buffer_ms,overrides.repeat"
+                    data-floats="overrides.pace,overrides.volume"
+                    data-json-fields=""
+                    data-clear="false"
+                >
+                    <input type="hidden" name="node_id" value="{{ node_id }}">
+                    <div class="form-grid">
+                        <label>
+                            <input type="checkbox" name="overrides.captions" value="true" {% if node_overrides.get('captions') %}checked{% endif %}>
+                            Captions for this node
+                        </label>
+                        <label>
+                            <input type="checkbox" name="overrides.visual_pulse" value="true" {% if node_overrides.get('visual_pulse') %}checked{% endif %}>
+                            Visual pulse on story playback
+                        </label>
+                        <label>
+                            <input type="checkbox" name="overrides.proximity_glow" value="true" {% if node_overrides.get('proximity_glow', True) %}checked{% endif %}>
+                            Proximity glow enabled
+                        </label>
+                        <label>
+                            <input type="checkbox" name="overrides.safety_limiter" value="true" {% if node_overrides.get('safety_limiter', True) %}checked{% endif %}>
+                            Safety limiter
+                        </label>
+                        <label>
+                            Mobility buffer (ms)
+                            <input
+                                type="number"
+                                min="0"
+                                step="50"
+                                name="overrides.mobility_buffer_ms"
+                                value="{{ node_overrides.get('mobility_buffer_ms', '') }}"
+                                placeholder="Same as global"
+                            >
+                        </label>
+                        <label>
+                            Repeat count (0-2)
+                            <input
+                                type="number"
+                                min="0"
+                                max="2"
+                                name="overrides.repeat"
+                                value="{{ node_overrides.get('repeat', '') }}"
+                                placeholder="0"
+                            >
+                        </label>
+                        <label>
+                            Playback pace (0.85-1.15)
+                            <input
+                                type="number"
+                                step="0.05"
+                                min="0.85"
+                                max="1.15"
+                                name="overrides.pace"
+                                value="{{ node_overrides.get('pace', '') }}"
+                                placeholder="1.0"
+                            >
+                        </label>
+                        <label>
+                            Volume override (0.0-1.0)
+                            <input
+                                type="number"
+                                step="0.05"
+                                min="0"
+                                max="1"
+                                name="overrides.volume"
+                                value="{{ node_overrides.get('volume', '') }}"
+                                placeholder="Auto"
+                            >
+                        </label>
+                    </div>
+                    <button type="submit">Save Overrides</button>
+                </form>
+            </div>
+        {% endfor %}
     {% else %}
-        <p><em>No overrides configured yet.</em></p>
+        <p><em>No overrides configurable until a content pack is active.</em></p>
     {% endif %}
 </section>
 {% endblock %}

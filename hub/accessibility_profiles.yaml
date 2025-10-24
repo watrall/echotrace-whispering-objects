@@ -4,6 +4,7 @@ global:
   high_contrast: true
   sensory_friendly: false
   safety_limiter: true
+  mobility_buffer_ms: 800
   quiet_hours: []
 presets:
   hard_of_hearing:

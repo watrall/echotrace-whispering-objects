@@ -38,6 +38,8 @@
             const method = (form.dataset.method || form.method || 'post').toUpperCase();
             const booleanFields = extractCsv(form.dataset.booleans);
             const jsonFields = extractCsv(form.dataset.jsonFields);
+            const intFields = extractCsv(form.dataset.ints);
+            const floatFields = extractCsv(form.dataset.floats);
             const wrapKey = form.dataset.wrap || null;
 
             const formData = new FormData(form);
@@ -47,25 +49,50 @@
                 if (value === null || value === undefined || value === '') {
                     return;
                 }
+
                 if (jsonFields.includes(key)) {
                     try {
-                        payload[key] = value ? JSON.parse(value) : {};
+                        const parsed = value ? JSON.parse(value) : {};
+                        setNestedValue(payload, key, parsed);
                     } catch (_error) {
                         setFlash(`Invalid JSON provided for ${key}.`, 'error');
-                        payload[key] = {};
+                        setNestedValue(payload, key, {});
                     }
                     return;
                 }
+
                 if (booleanFields.includes(key)) {
-                    payload[key] = value === 'true' || value === 'on' || value === '1';
+                    const booleanValue = value === 'true' || value === 'on' || value === '1';
+                    setNestedValue(payload, key, booleanValue);
                     return;
                 }
-                payload[key] = value;
+
+                if (intFields.includes(key)) {
+                    const parsedInt = parseInt(String(value), 10);
+                    if (Number.isNaN(parsedInt)) {
+                        setFlash(`Field ${key} requires an integer.`, 'error');
+                        throw new Error(`Invalid int: ${key}`);
+                    }
+                    setNestedValue(payload, key, parsedInt);
+                    return;
+                }
+
+                if (floatFields.includes(key)) {
+                    const parsedFloat = parseFloat(String(value));
+                    if (Number.isNaN(parsedFloat)) {
+                        setFlash(`Field ${key} requires a number.`, 'error');
+                        throw new Error(`Invalid float: ${key}`);
+                    }
+                    setNestedValue(payload, key, parsedFloat);
+                    return;
+                }
+
+                setNestedValue(payload, key, value);
             });
 
             booleanFields.forEach((field) => {
-                if (!(field in payload)) {
-                    payload[field] = false;
+                if (!hasNestedValue(payload, field)) {
+                    setNestedValue(payload, field, false);
                 }
             });
 
@@ -109,16 +136,6 @@
             }
         }
 
-        function extractCsv(value) {
-            if (!value) {
-                return [];
-            }
-            return value
-                .split(',')
-                .map((item) => item.trim())
-                .filter(Boolean);
-        }
-
         document.querySelectorAll('form[data-api]').forEach((form) => {
             form.addEventListener('submit', submitApiForm);
         });
@@ -129,5 +146,41 @@
                 setFlash(`Reboot command queued for ${nodeId} (placeholder).`, 'success');
             });
         });
+
+        function setNestedValue(target, path, value) {
+            const parts = path.split('.');
+            let current = target;
+            for (let index = 0; index < parts.length - 1; index += 1) {
+                const part = parts[index];
+                if (!(part in current) || typeof current[part] !== 'object' || current[part] === null) {
+                    current[part] = {};
+                }
+                current = current[part];
+            }
+            current[parts[parts.length - 1]] = value;
+        }
+
+        function hasNestedValue(target, path) {
+            const parts = path.split('.');
+            let current = target;
+            for (let index = 0; index < parts.length; index += 1) {
+                const part = parts[index];
+                if (!(part in current)) {
+                    return false;
+                }
+                current = current[part];
+            }
+            return true;
+        }
+
+        function extractCsv(value) {
+            if (!value) {
+                return [];
+            }
+            return value
+                .split(',')
+                .map((item) => item.trim())
+                .filter(Boolean);
+        }
     });
 })();

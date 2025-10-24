@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 import hmac
+import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -11,7 +12,14 @@ from typing import Any, Dict, Optional
 
 from flask import Flask, Response, abort, jsonify, redirect, render_template, request, send_file, url_for
 
-from .accessibility_store import ACCESSIBILITY_PATH, apply_preset, load_profiles, save_profiles
+from .accessibility_store import (
+    ACCESSIBILITY_PATH,
+    apply_preset,
+    derive_runtime_payloads,
+    load_profiles,
+    save_profiles,
+    set_per_node_override,
+)
 from .config_loader import HubConfig, load_config
 from .content_manager import ContentManager, ContentPack, MediaAsset
 from .logging_utils import CsvEventLogger
@@ -28,6 +36,7 @@ class DashboardContext:
     narrative_state: NarrativeState
     current_pack: Optional[ContentPack] = None
     health_snapshot: Dict[str, float] = field(default_factory=dict)
+    hub_controller: Optional[Any] = None
 
     def select_pack(self, pack_name: str) -> ContentPack:
         pack = self.content_manager.load_pack(pack_name)
@@ -37,8 +46,31 @@ class DashboardContext:
     def reload_accessibility(self) -> None:
         self.accessibility = load_profiles(ACCESSIBILITY_PATH)
 
+    def push_config_to_node(self, node_id: str, payload: Dict[str, Any]) -> bool:
+        controller = self.hub_controller
+        if controller is None:
+            logging.getLogger(__name__).debug(
+                "No hub controller configured; assuming config push to %s succeeded.",
+                node_id,
+            )
+            return True
+        try:
+            return bool(controller.push_node_config(node_id, payload))
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logging.getLogger(__name__).warning("Failed to push config to %s: %s", node_id, exc)
+            return False
 
-def create_app(config: HubConfig | None = None) -> Flask:
+    def push_accessibility_configs(self) -> Dict[str, bool]:
+        if not self.current_pack:
+            return {}
+        payloads = derive_runtime_payloads(self.accessibility, self.current_pack.nodes)
+        results: Dict[str, bool] = {}
+        for node_id, payload in payloads.items():
+            results[node_id] = self.push_config_to_node(node_id, payload)
+        return results
+
+
+def create_app(config: HubConfig | None = None, hub_controller: Any | None = None) -> Flask:
     """Create and configure the Flask application."""
     hub_config = config or load_config()
 
@@ -56,6 +88,7 @@ def create_app(config: HubConfig | None = None) -> Flask:
         narrative_state=NarrativeState(
             required_fragments=hub_config.narrative.required_fragments_to_unlock
         ),
+        hub_controller=hub_controller,
     )
 
     available_packs = context.content_manager.list_packs()
@@ -66,6 +99,7 @@ def create_app(config: HubConfig | None = None) -> Flask:
             app.logger.warning("Failed to load initial pack '%s': %s", available_packs[0], exc)
 
     app.config["DASHBOARD_CONTEXT"] = context
+    app.config["HUB_CONTROLLER"] = hub_controller
 
     credentials: Optional[tuple[str, str]] = None
     if hub_config.security.require_basic_auth:
@@ -157,6 +191,7 @@ def create_app(config: HubConfig | None = None) -> Flask:
         return render_template(
             "accessibility.html",
             profiles=profiles,
+            nodes=ctx.current_pack.nodes if ctx.current_pack else {},
         )
 
     @app.route("/calibration")
@@ -219,8 +254,8 @@ def create_app(config: HubConfig | None = None) -> Flask:
         if not isinstance(payload, dict):
             abort(400, description="payload must be an object")
         app.logger.info("Configuration push requested for %s: %s", node_id, payload)
-        # In this scaffold we acknowledge immediately. Future chunks will bridge to HubListener.
-        return jsonify({"ok": True, "acknowledged": True, "node_id": node_id})
+        acknowledged = ctx.push_config_to_node(node_id, payload)
+        return jsonify({"ok": acknowledged, "acknowledged": acknowledged, "node_id": node_id})
 
     @app.route("/api/apply-preset", methods=["POST"])
     @require_auth
@@ -245,7 +280,31 @@ def create_app(config: HubConfig | None = None) -> Flask:
 
         save_profiles(profiles, ACCESSIBILITY_PATH)
         ctx.reload_accessibility()
-        return jsonify({"ok": True, "global": ctx.accessibility.get("global", {})})
+        push_results = ctx.push_accessibility_configs()
+        return jsonify(
+            {
+                "ok": True,
+                "global": ctx.accessibility.get("global", {}),
+                "push": push_results,
+            }
+        )
+
+    @app.route("/api/accessibility/override", methods=["POST"])
+    @require_auth
+    def api_accessibility_override() -> Response:
+        ctx = get_context()
+        data = _require_json(request)
+        node_id = _require_field(data, "node_id")
+        overrides = data.get("overrides")
+        if not isinstance(overrides, dict):
+            abort(400, description="overrides must be an object")
+
+        set_per_node_override(ctx.accessibility, node_id, overrides)
+        save_profiles(ctx.accessibility, ACCESSIBILITY_PATH)
+        ctx.reload_accessibility()
+        push_results = ctx.push_accessibility_configs()
+        per_node = ctx.accessibility.get("per_node_overrides", {}).get(node_id, {})
+        return jsonify({"ok": True, "overrides": per_node, "push": push_results})
 
     @app.route("/api/select-pack", methods=["POST"])
     @require_auth
@@ -259,7 +318,8 @@ def create_app(config: HubConfig | None = None) -> Flask:
             abort(404, description=f"Content pack '{pack_name}' not found.")
         except ValueError as exc:
             abort(400, description=str(exc))
-        return jsonify({"ok": True, "pack": pack.name})
+        push_results = ctx.push_accessibility_configs()
+        return jsonify({"ok": True, "pack": pack.name, "push": push_results})
 
     @app.route("/api/export-csv")
     @require_auth
