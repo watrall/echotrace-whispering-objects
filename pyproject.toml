@@ -20,6 +20,7 @@ disallow_untyped_defs = true
 ignore_missing_imports = true
 exclude = "(^pi-nodes/)"
 files = ["hub", "pi_nodes", "tests"]
+explicit_package_bases = true
 
 [tool.ruff]
 line-length = 100
