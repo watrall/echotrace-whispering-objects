@@ -5,8 +5,9 @@ from __future__ import annotations
 import csv
 import datetime as dt
 import logging
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, TextIO
+from typing import Dict, List, Optional, TextIO
 
 
 LOGGER = logging.getLogger(__name__)
@@ -93,4 +94,89 @@ class CsvEventLogger:
             LOGGER.debug("Error while closing CsvEventLogger during garbage collection.", exc_info=True)
 
 
-__all__ = ["CsvEventLogger", "CSV_COLUMNS"]
+@dataclass
+class AnalyticsSummary:
+    """Aggregate interpretation-ready analytics metrics."""
+
+    by_node: Dict[str, int]
+    heartbeat_by_node: Dict[str, int]
+    narrative_unlocks: int
+    total_triggers: int
+    completion_rate: float
+    mean_trigger_interval_seconds: float
+    recent_events: List[Dict[str, str]]
+
+
+def summarize_events(logs_dir: Path) -> Optional[AnalyticsSummary]:
+    """Parse the latest CSV log and return derived metrics."""
+    logger = CsvEventLogger(logs_dir)
+    latest = logger.latest_csv()
+    logger.close()
+    if latest is None or not latest.exists():
+        return None
+
+    by_node: Dict[str, int] = {}
+    heartbeat_by_node: Dict[str, int] = {}
+    narrative_unlocks = 0
+    trigger_timestamps: List[dt.datetime] = []
+    recent_events: List[Dict[str, str]] = []
+
+    try:
+        with latest.open("r", encoding="utf-8") as handle:
+            reader = csv.DictReader(handle)
+            rows = list(reader)
+    except OSError as exc:
+        LOGGER.warning("Unable to read analytics log %s: %s", latest, exc)
+        return None
+
+    for row in rows:
+        event = row.get("event", "")
+        node_id = row.get("node_id", "") or ""
+        detail = row.get("detail", "")
+        timestamp_raw = row.get("timestamp", "")
+
+        recent_events.append(
+            {"timestamp": timestamp_raw, "event": event, "node_id": node_id, "detail": detail}
+        )
+
+        if event == "fragment_triggered":
+            by_node[node_id] = by_node.get(node_id, 0) + 1
+            if timestamp_raw:
+                try:
+                    trigger_timestamps.append(dt.datetime.fromisoformat(timestamp_raw))
+                except ValueError:
+                    pass
+        elif event == "heartbeat_received":
+            heartbeat_by_node[node_id] = heartbeat_by_node.get(node_id, 0) + 1
+        elif event == "narrative_unlocked":
+            narrative_unlocks += 1
+
+    total_triggers = sum(by_node.values())
+    completion_rate = 0.0
+    if total_triggers > 0:
+        completion_rate = min(1.0, narrative_unlocks / total_triggers)
+
+    mean_interval = 0.0
+    if len(trigger_timestamps) >= 2:
+        trigger_timestamps.sort()
+        deltas = [
+            (trigger_timestamps[i] - trigger_timestamps[i - 1]).total_seconds()
+            for i in range(1, len(trigger_timestamps))
+        ]
+        if deltas:
+            mean_interval = sum(deltas) / len(deltas)
+
+    recent_events = recent_events[-10:]
+
+    return AnalyticsSummary(
+        by_node=by_node,
+        heartbeat_by_node=heartbeat_by_node,
+        narrative_unlocks=narrative_unlocks,
+        total_triggers=total_triggers,
+        completion_rate=completion_rate,
+        mean_trigger_interval_seconds=mean_interval,
+        recent_events=recent_events,
+    )
+
+
+__all__ = ["AnalyticsSummary", "CSV_COLUMNS", "CsvEventLogger", "summarize_events"]

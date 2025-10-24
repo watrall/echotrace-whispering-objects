@@ -88,13 +88,11 @@ class HubListener:
         )
         self._client.connect(self._config.broker_host, self._config.broker_port, keepalive=60)
         self._client.loop_start()
-        self._event_logger.record_event("listener_started", "hub", "MQTT loop started")
 
     def stop(self) -> None:
         """Stop the MQTT listener and close resources."""
         self._client.loop_stop()
         self._client.disconnect()
-        self._event_logger.record_event("listener_stopped", "hub", "MQTT loop stopped")
         self._event_logger.close()
 
     def run_forever(self) -> None:

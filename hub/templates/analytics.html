@@ -3,17 +3,104 @@
 <section>
     <h2>Analytics Summary</h2>
     <p>Mystery unlock status: <strong>{{ 'Unlocked' if state['unlocked'] else 'Locked' }}</strong></p>
-    <p>Total unique fragments triggered: <strong>{{ state['triggered'] | length }}</strong></p>
-    <p>Recent heartbeat ages:</p>
-    {% if health %}
-        <ul>
-            {% for node_id, seconds in health.items() %}
-                <li>{{ node_id }} — {{ '%.0f'|format(seconds) }}s ago</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p><em>No heartbeat data recorded yet.</em></p>
-    {% endif %}
+    <p>Triggered fragments: <strong>{{ state['triggered'] | length }}</strong></p>
     <a class="button-link" href="{{ url_for('api_export_csv') }}">Download CSV Export</a>
 </section>
+
+<section id="analytics-dashboard">
+    <h2>Latest Metrics</h2>
+    <div id="analytics-status"><em>Loading analytics…</em></div>
+    <div id="analytics-content" style="display:none;">
+        <p>Total triggers logged: <strong id="total-triggers">0</strong></p>
+        <p>Narrative unlocks: <strong id="narrative-unlocks">0</strong></p>
+        <p>Completion rate: <strong id="completion-rate">0%</strong></p>
+        <p>Average time between triggers: <strong id="mean-interval">0s</strong></p>
+
+        <h3>Triggers by Node</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Node</th>
+                    <th>Trigger Count</th>
+                </tr>
+            </thead>
+            <tbody id="trigger-table"></tbody>
+        </table>
+
+        <h3>Heartbeat Counts</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Node</th>
+                    <th>Heartbeats Logged</th>
+                </tr>
+            </thead>
+            <tbody id="heartbeat-table"></tbody>
+        </table>
+
+        <h3>Recent Events</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Event</th>
+                    <th>Node</th>
+                    <th>Detail</th>
+                </tr>
+            </thead>
+            <tbody id="recent-events"></tbody>
+        </table>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('{{ url_for("api_analytics_summary") }}', { credentials: 'include' })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Analytics unavailable');
+            }
+            return response.json();
+        })
+        .then((data) => {
+            const statusEl = document.getElementById('analytics-status');
+            const contentEl = document.getElementById('analytics-content');
+            statusEl.style.display = 'none';
+            contentEl.style.display = 'block';
+
+            document.getElementById('total-triggers').textContent = data.total_triggers;
+            document.getElementById('narrative-unlocks').textContent = data.narrative_unlocks;
+            document.getElementById('completion-rate').textContent = (data.completion_rate * 100).toFixed(1) + '%';
+            document.getElementById('mean-interval').textContent = data.mean_trigger_interval_seconds.toFixed(1) + ' s';
+
+            const triggerTable = document.getElementById('trigger-table');
+            triggerTable.innerHTML = '';
+            Object.entries(data.by_node || {}).forEach(([node, count]) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${node || '—'}</td><td>${count}</td>`;
+                triggerTable.appendChild(row);
+            });
+
+            const heartbeatTable = document.getElementById('heartbeat-table');
+            heartbeatTable.innerHTML = '';
+            Object.entries(data.heartbeat_by_node || {}).forEach(([node, count]) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${node || '—'}</td><td>${count}</td>`;
+                heartbeatTable.appendChild(row);
+            });
+
+            const recentTable = document.getElementById('recent-events');
+            recentTable.innerHTML = '';
+            (data.recent_events || []).reverse().forEach((event) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${event.timestamp}</td><td>${event.event}</td><td>${event.node_id}</td><td>${event.detail}</td>`;
+                recentTable.appendChild(row);
+            });
+        })
+        .catch(() => {
+            const statusEl = document.getElementById('analytics-status');
+            statusEl.textContent = 'Analytics will appear once the installation logs activity.';
+        });
+});
+</script>
 {% endblock %}

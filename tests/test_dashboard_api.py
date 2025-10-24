@@ -117,3 +117,10 @@ def test_set_per_node_override_updates_yaml(client) -> None:
 
     stored = yaml.safe_load(profiles_path.read_text(encoding="utf-8"))
     assert stored["per_node_overrides"]["object1"]["visual_pulse"] is True
+
+
+def test_analytics_summary_no_data(client) -> None:
+    """Analytics summary should report lack of data gracefully."""
+    testing_client, _controller, _path = client
+    response = testing_client.get("/api/analytics/summary", headers=_auth_header())
+    assert response.status_code == 404

@@ -1,8 +1,19 @@
-# Sample content pack scaffold for development.
 name: sample-pack
 nodes:
   object1:
     role: whisper
+    default_language: en
+  object2:
+    role: whisper
+    default_language: en
+  object3:
+    role: whisper
+    default_language: en
+  object4:
+    role: whisper
+    default_language: es
+  mystery:
+    role: mystery
     default_language: en
 media:
   object1:
@@ -15,3 +26,43 @@ media:
     es:
       audio: audio/object1_es.mp3
       transcript: transcripts/object1_es.html
+  object2:
+    en:
+      audio: audio/object2_en.mp3
+      transcript: transcripts/object2_en.html
+    fr:
+      audio: audio/object2_fr.mp3
+      transcript: transcripts/object2_fr.html
+    es:
+      audio: audio/object2_es.mp3
+      transcript: transcripts/object2_es.html
+  object3:
+    en:
+      audio: audio/object3_en.mp3
+      transcript: transcripts/object3_en.html
+    fr:
+      audio: audio/object3_fr.mp3
+      transcript: transcripts/object3_fr.html
+    es:
+      audio: audio/object3_es.mp3
+      transcript: transcripts/object3_es.html
+  object4:
+    en:
+      audio: audio/object4_en.mp3
+      transcript: transcripts/object4_en.html
+    fr:
+      audio: audio/object4_fr.mp3
+      transcript: transcripts/object4_fr.html
+    es:
+      audio: audio/object4_es.mp3
+      transcript: transcripts/object4_es.html
+  mystery:
+    en:
+      audio: audio/mystery_en.mp3
+      transcript: transcripts/mystery_en.html
+    fr:
+      audio: audio/mystery_fr.mp3
+      transcript: transcripts/mystery_fr.html
+    es:
+      audio: audio/mystery_es.mp3
+      transcript: transcripts/mystery_es.html

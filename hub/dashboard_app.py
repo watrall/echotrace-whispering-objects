@@ -22,7 +22,7 @@ from .accessibility_store import (
 )
 from .config_loader import HubConfig, load_config
 from .content_manager import ContentManager, ContentPack, MediaAsset
-from .logging_utils import CsvEventLogger
+from .logging_utils import CsvEventLogger, summarize_events
 from .narrative_state import NarrativeState
 
 
@@ -331,6 +331,26 @@ def create_app(config: HubConfig | None = None, hub_controller: Any | None = Non
         if latest is None or not latest.exists():
             abort(404, description="No analytics CSV available yet.")
         return send_file(latest, mimetype="text/csv", as_attachment=True, download_name=latest.name)
+
+    @app.route("/api/analytics/summary")
+    @require_auth
+    def api_analytics_summary() -> Response:
+        ctx = get_context()
+        summary = summarize_events(ctx.config.logs_dir)
+        if summary is None:
+            return jsonify({"ok": False, "message": "No analytics available."}), 404
+        return jsonify(
+            {
+                "ok": True,
+                "by_node": summary.by_node,
+                "heartbeat_by_node": summary.heartbeat_by_node,
+                "narrative_unlocks": summary.narrative_unlocks,
+                "total_triggers": summary.total_triggers,
+                "completion_rate": summary.completion_rate,
+                "mean_trigger_interval_seconds": summary.mean_trigger_interval_seconds,
+                "recent_events": summary.recent_events,
+            }
+        )
 
     @app.route("/transcripts/<pack_name>/<path:filename>")
     def serve_transcript(pack_name: str, filename: str) -> Response:
