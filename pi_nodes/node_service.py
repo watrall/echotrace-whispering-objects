@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-import yaml
+import yaml  # type: ignore[import]
 
 try:  # pragma: no cover - exercised only on devices with MQTT client installed
     import paho.mqtt.client as mqtt

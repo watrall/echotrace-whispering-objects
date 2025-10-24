@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-import yaml
+import yaml  # type: ignore[import]
 
 ACCESSIBILITY_PATH = Path(__file__).resolve().parent / "accessibility_profiles.yaml"
 

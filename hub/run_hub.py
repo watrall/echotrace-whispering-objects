@@ -8,7 +8,7 @@ import sys
 from contextlib import suppress
 
 try:
-    from waitress import serve
+    from waitress import serve  # type: ignore[import]
 except ImportError:  # pragma: no cover - fallback for development
     serve = None  # type: ignore[assignment]
 

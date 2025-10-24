@@ -7,7 +7,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-import yaml
+import yaml  # type: ignore[import]
 
 LOGGER = logging.getLogger(__name__)
 
