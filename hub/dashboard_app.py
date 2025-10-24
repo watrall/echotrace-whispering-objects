@@ -126,12 +126,7 @@ def create_app(config: HubConfig | None = None, hub_controller: Any | None = Non
     def get_context() -> DashboardContext:
         return cast(DashboardContext, app.config["DASHBOARD_CONTEXT"])
 
-    RouteReturn = Union[
-        Response,
-        str,
-        tuple[Response, int],
-        tuple[Response, int, dict[str, Any]],
-    ]
+    RouteReturn = Response | str | tuple[Response, int] | tuple[Response, int, dict[str, Any]]
     F = TypeVar("F", bound=Callable[..., RouteReturn])
 
     def require_auth(func: F) -> F:

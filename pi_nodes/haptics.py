@@ -6,15 +6,15 @@ import logging
 from typing import TYPE_CHECKING
 
 try:  # pragma: no cover - executed when gpiozero is installed
-    from gpiozero import DigitalOutputDevice as _HardwareOutputDevice
+    from gpiozero import DigitalOutputDevice as DigitalOutputDevice  # type: ignore[import]
 except ImportError:  # pragma: no cover - executed in test/mock environments
-    _HardwareOutputDevice = None  # type: ignore[assignment]
+    DigitalOutputDevice = None  # type: ignore[assignment]
 
 if TYPE_CHECKING:  # pragma: no cover - typing aid only
-    from gpiozero import DigitalOutputDevice as _OutputDeviceBase  # type: ignore
+    from gpiozero import DigitalOutputDevice as DigitalOutputDeviceTyped  # type: ignore[import]
 else:
 
-    class _OutputDeviceBase:  # type: ignore[too-many-instance-attributes]
+    class DigitalOutputDeviceTyped:  # type: ignore[too-many-instance-attributes]
         """Fallback implementation used when gpiozero is not available."""
 
         def __init__(self, pin: int, active_high: bool = True) -> None:  # noqa: D401
@@ -42,10 +42,10 @@ class Haptics:
     """Provide a minimal wrapper for toggling a vibration motor."""
 
     def __init__(self, pin: int, active_high: bool = True) -> None:
-        if _HardwareOutputDevice is not None:
-            self._device: _OutputDeviceBase = _HardwareOutputDevice(pin, active_high=active_high)
+        if DigitalOutputDevice is not None:
+            self._device: DigitalOutputDeviceTyped = DigitalOutputDevice(pin, active_high=active_high)
         else:
-            self._device = _OutputDeviceBase(pin, active_high=active_high)
+            self._device = DigitalOutputDeviceTyped(pin, active_high=active_high)
         LOGGER.debug("Haptics initialised on pin %s", pin)
 
     def pulse(self, ms: int) -> None:
