@@ -1,2 +1,1 @@
 """EchoTrace hub package."""
-
